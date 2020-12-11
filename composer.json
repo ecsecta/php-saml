@@ -14,15 +14,8 @@
         "issues": "https://github.com/onelogin/php-saml/issues",
         "source": "https://github.com/onelogin/php-saml/"
     },
-    "repositories": [
-      {
-        "type": "vcs",
-        "url": "https://github.com/ecsecta/xmlseclibs"
-      }
-    ],
     "require": {
-        "php": ">=5.4",
-        "robrichards/xmlseclibs": "dev-rsassa-pss"
+        "php": ">=5.4"
     },
     "require-dev": {
         "php-coveralls/php-coveralls": "^1.0.2 || ^2.0",
