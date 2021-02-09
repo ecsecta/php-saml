@@ -27,6 +27,13 @@ use Exception;
 class Settings
 {
     /**
+     * List AuthnRequestExtensions.
+     *
+     * @var array
+     */
+    private $_authnReqExt = array();
+
+    /**
      * List of paths.
      *
      * @var array
@@ -257,6 +264,9 @@ class Settings
         if (empty($errors)) {
             $this->_errors = array();
 
+            if (isset($settings['authnReqExt'])) {
+                $this->_authnReqExt = $settings['authnReqExt'];
+            }
             if (isset($settings['strict'])) {
                 $this->_strict = $settings['strict'];
             }
@@ -689,6 +699,16 @@ class Settings
         $key = $this->getSPkey();
         $cert = $this->getSPcert();
         return (!empty($key) && !empty($cert));
+    }
+
+    /**
+     * Returns the AuthnRequestExtensions.
+     *
+     * @return array AuthnRequestExtensions
+     */
+    public function getAuthnReqExt()
+    {
+        return $this->_getAuthnReqExt;
     }
 
     /**
