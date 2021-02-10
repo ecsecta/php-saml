@@ -708,7 +708,7 @@ class Settings
      */
     public function getAuthnReqExt()
     {
-        return $this->_getAuthnReqExt;
+        return $this->_authnReqExt;
     }
 
     /**

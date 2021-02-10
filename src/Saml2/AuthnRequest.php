@@ -13,6 +13,9 @@
  * @link    https://github.com/onelogin/php-saml
  */
 
+use RobRichards\XMLSecLibs\XMLSecurityKey;
+use RobRichards\XMLSecLibs\XMLSecEnc;
+
 namespace OneLogin\Saml2;
 
 /**
@@ -146,29 +149,42 @@ REQUESTEDAUTHN;
                 $requestedAuthnStr .= '    </samlp:RequestedAuthnContext>';
             }
         }
+
+        // process extensions
         $nsArr = array();
         $extArr = $settings->getAuthnReqExt();
         $extStr = '';
         if (count($extArr) > 0) {
+            $extStr .= '    <samlp:Extensions>';
             foreach ($extArr as $extKey => $extVal) {
-                $extStr .= '    <samlp:Extensions>';
                 if ($extKey === "tr03130") {
+
+                    // XMLSecurityKey::AES256_GCM
                     $nsArr[] = 'xmlns:xenc="http://www.w3.org/2001/04/xmlenc#"';
                     $nsArr[] = 'xmlns:eid="http://bsi.bund.de/eID/"';
                     $nsArr[] = 'xmlns:ds="http://www.w3.org/2000/09/xmldsig#"';
 
                     $extStr .= '        <eid:EncryptedAuthnRequestExtension>';
                     $extStr .= '            <xenc:EncryptedData Type="http://www.w3.org/2001/04/xmlenc#Element">';
-                    $extStr .= '                <xenc:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#aes256"/>';
+                    $extStr .= '                <xenc:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#aes256-gcm"/>';
                     $extStr .= '                <ds:KeyInfo>';
+                    $extStr .= '                    <xenc:EncryptedKey>';
+                    $extStr .= '                        <xenc:EncryptionMethodAlgorithm="http://www.w3.org/2001/04/xmlenc#rsa-oaep">';
+                    $extStr .= '                        <xenc:CipherData>';
+                    $extStr .= '                            <xenc:CipherValue>';
+                    $extStr .= '                            </xenc:CipherValue>';
+                    $extStr .= '                        </xenc:CipherData>';
+                    $extStr .= '                    </xenc:EncryptedKey>';
                     $extStr .= '                </ds:KeyInfo>';
                     $extStr .= '                <xenc:CipherData>';
+                    $extStr .= '                    <xenc:CipherValue>';
+                    $extStr .= '                    </xenc:CipherValue>';
                     $extStr .= '                </xenc:CipherData>';
-                    $extStr .= '            </xenc:EncryptedDataType>';
+                    $extStr .= '            </xenc:EncryptedData>';
                     $extStr .= '        </eid:EncryptedAuthnRequestExtension>';
                 }
-                $extStr .= '    </samlp:Extensions>';
             }
+            $extStr .= '    </samlp:Extensions>';
         }
         $nsArr = array_unique($nsArr);
         $nsStr = implode(" ", $nsArr);
