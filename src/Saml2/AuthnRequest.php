@@ -13,10 +13,10 @@
  * @link    https://github.com/onelogin/php-saml
  */
 
+namespace OneLogin\Saml2;
+
 use RobRichards\XMLSecLibs\XMLSecurityKey;
 use RobRichards\XMLSecLibs\XMLSecEnc;
-
-namespace OneLogin\Saml2;
 
 /**
  * SAML 2 Authentication Request
@@ -158,30 +158,33 @@ REQUESTEDAUTHN;
             $extStr .= '    <samlp:Extensions>';
             foreach ($extArr as $extKey => $extVal) {
                 if ($extKey === "tr03130") {
-
-                    // XMLSecurityKey::AES256_GCM
-                    $nsArr[] = 'xmlns:xenc="http://www.w3.org/2001/04/xmlenc#"';
+                    // create dom from given xml
+                    $dom = new \DOMDocument();
+                    if(!$dom->loadXML($extVal)) {
+                        continue;
+                    }
+                    // encryption
+                    $idpData = $settings->getIdPData();
+                    $idpCertEnc = $idpData['x509certMulti']['encryption'][0];
+                    if (!openssl_x509_read($idpCertEnc)) {
+                        continue;
+                    } 
+                    $objKey = new XMLSecurityKey(XMLSecurityKey::AES256_GCM);
+	                $objKey->generateSessionKey();
+                    $siteKey = new XMLSecurityKey(XMLSecurityKey::RSA_OAEP, array('type'=>'public'));
+                    $siteKey->loadKey($idpCertEnc, false, TRUE);
+                    $enc = new XMLSecEnc();
+	                $enc->type = XMLSecEnc::Element;
+	                $enc->setNode($dom->documentElement);
+                    $enc->encryptKey($siteKey, $objKey);
+	                $encNode = $enc->encryptNode($objKey);
+                    $extStr .= '<eid:EncryptedAuthnRequestExtension>';
+                    $extStr .= $dom->saveXML($encNode);
+                    $extStr .= '</eid:EncryptedAuthnRequestExtension>';
+                    // add needed namespaces
                     $nsArr[] = 'xmlns:eid="http://bsi.bund.de/eID/"';
-                    $nsArr[] = 'xmlns:ds="http://www.w3.org/2000/09/xmldsig#"';
-
-                    $extStr .= '        <eid:EncryptedAuthnRequestExtension>';
-                    $extStr .= '            <xenc:EncryptedData Type="http://www.w3.org/2001/04/xmlenc#Element">';
-                    $extStr .= '                <xenc:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#aes256-gcm"/>';
-                    $extStr .= '                <ds:KeyInfo>';
-                    $extStr .= '                    <xenc:EncryptedKey>';
-                    $extStr .= '                        <xenc:EncryptionMethodAlgorithm="http://www.w3.org/2001/04/xmlenc#rsa-oaep">';
-                    $extStr .= '                        <xenc:CipherData>';
-                    $extStr .= '                            <xenc:CipherValue>';
-                    $extStr .= '                            </xenc:CipherValue>';
-                    $extStr .= '                        </xenc:CipherData>';
-                    $extStr .= '                    </xenc:EncryptedKey>';
-                    $extStr .= '                </ds:KeyInfo>';
-                    $extStr .= '                <xenc:CipherData>';
-                    $extStr .= '                    <xenc:CipherValue>';
-                    $extStr .= '                    </xenc:CipherValue>';
-                    $extStr .= '                </xenc:CipherData>';
-                    $extStr .= '            </xenc:EncryptedData>';
-                    $extStr .= '        </eid:EncryptedAuthnRequestExtension>';
+                    // remove elements not compatible to tr03130
+                    $requestedAuthnStr='';
                 }
             }
             $extStr .= '    </samlp:Extensions>';
@@ -204,7 +207,7 @@ REQUESTEDAUTHN;
     Destination="{$destination}"
     ProtocolBinding="{$spData['assertionConsumerService']['binding']}"
     AssertionConsumerServiceURL="{$acsUrl}">
-    <saml:Issuer>{$spEntityId}</saml:Issuer>{$subjectStr}{$nameIdPolicyStr}{$requestedAuthnStr}{$extStr}
+    <saml:Issuer>{$spEntityId}</saml:Issuer>{$extStr}{$subjectStr}{$nameIdPolicyStr}{$requestedAuthnStr}
 </samlp:AuthnRequest>
 AUTHNREQUEST;
 
