@@ -209,6 +209,24 @@ REQUESTEDAUTHN;
 </samlp:AuthnRequest>
 AUTHNREQUEST;
 
+        // sign the request
+        // TODO according to spec we should NOT need this, clarify!
+        $security = $settings->getSecurityData();
+        if (isset($security['authnRequestsSigned']) && $security['authnRequestsSigned']) {
+            $dom = new \DOMDocument();
+            $dom->loadXML($request);
+            $objDSig = new XMLSecurityDSig();
+            $objDSig->setCanonicalMethod(XMLSecurityDSig::EXC_C14N);
+            $objDSig->addReference($dom, XMLSecurityDSig::SHA256, array('http://www.w3.org/2000/09/xmldsig#enveloped-signature'), array('force_uri' => true));
+            $objKey = new XMLSecurityKey(XMLSecurityKey::RSA_SHA256, array('type'=>'private'));
+            $spData = $settings->getSPData();
+            $objKey->loadKey($spData['privateKey']);
+            $objDSig->sign($objKey);
+            $objDSig->add509Cert($spData['x509cert']);
+            $objDSig->appendSignature($dom->documentElement);
+            $request = $dom->saveXML();
+        }
+
         $this->_id = $id;
         $this->_authnRequest = $request;
     }
