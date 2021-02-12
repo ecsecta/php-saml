@@ -157,17 +157,17 @@ REQUESTEDAUTHN;
         if (count($extArr) > 0) {
             $extStr .= '    <samlp:Extensions>';
             foreach ($extArr as $extKey => $extVal) {
-                if ($extKey === "tr03130") {
+                if ($extKey === "tr03130" && $extVal != "") {
                     // create dom from given xml
                     $dom = new \DOMDocument();
                     if(!$dom->loadXML($extVal)) {
-                        continue;
+                        throw new \Exception('could not build tr03031 AuthnRequestExtension, invalid XML given');
                     }
                     // encryption
                     $idpData = $settings->getIdPData();
                     $idpCertEnc = $idpData['x509certMulti']['encryption'][0];
                     if (!openssl_x509_read($idpCertEnc)) {
-                        continue;
+                        throw new \Exception('could not build tr03031 AuthnRequestExtension, invalid certificate given');
                     } 
                     $objKey = new XMLSecurityKey(XMLSecurityKey::AES256_GCM);
 	                $objKey->generateSessionKey();
@@ -183,8 +183,6 @@ REQUESTEDAUTHN;
                     $extStr .= '</eid:EncryptedAuthnRequestExtension>';
                     // add needed namespaces
                     $nsArr[] = 'xmlns:eid="http://bsi.bund.de/eID/"';
-                    // remove elements not compatible to tr03130
-                    $requestedAuthnStr='';
                 }
             }
             $extStr .= '    </samlp:Extensions>';
