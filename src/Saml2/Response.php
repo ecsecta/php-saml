@@ -171,8 +171,16 @@ class Response
                 $security = $this->_settings->getSecurityData();
 
                 if ($security['wantXMLValidation']) {
-                    $errorXmlMsg = "Invalid SAML Response. Not match the saml-schema-protocol-2.0.xsd";
-                    $res = Utils::validateXML($this->document, 'saml-schema-protocol-2.0.xsd', $this->_settings->isDebugActive(), $this->_settings->getSchemasPath());
+                    // determine schema and schemapath for validation
+                    // TODO verify this!
+                    $schema = 'saml-schema-protocol-2.0.xsd';
+                    $schemaPath = $this->_settings->getSchemasPath();
+                    if (array_key_exists('tr03130, ',$this->_settings->getAuthnReqExt())) {
+                        $schema = 'TR-03130eID-Server.xsd';
+                        $schemaPath = $this->_settings->getSchemasPath().'/tr03130';
+                    }
+                    $errorXmlMsg = "Invalid SAML Response. Not match the ".$schema;
+                    $res = Utils::validateXML($this->document, $schema, $this->_settings->isDebugActive(), $schemaPath);
                     if (!$res instanceof DOMDocument) {
                         throw new ValidationError(
                             $errorXmlMsg,

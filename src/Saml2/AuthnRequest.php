@@ -12,11 +12,12 @@
  * @license MIT https://github.com/onelogin/php-saml/blob/master/LICENSE
  * @link    https://github.com/onelogin/php-saml
  */
-
-use RobRichards\XMLSecLibs\XMLSecurityKey;
-use RobRichards\XMLSecLibs\XMLSecEnc;
-
 namespace OneLogin\Saml2;
+
+use phpDocumentor\Reflection\PseudoTypes\False_;
+use RobRichards\XMLSecLibs\XMLSecurityKey;
+use RobRichards\XMLSecLibs\XMLSecurityDSig;
+use RobRichards\XMLSecLibs\XMLSecEnc;
 
 /**
  * SAML 2 Authentication Request
@@ -157,31 +158,32 @@ REQUESTEDAUTHN;
         if (count($extArr) > 0) {
             $extStr .= '    <samlp:Extensions>';
             foreach ($extArr as $extKey => $extVal) {
-                if ($extKey === "tr03130") {
-
-                    // XMLSecurityKey::AES256_GCM
-                    $nsArr[] = 'xmlns:xenc="http://www.w3.org/2001/04/xmlenc#"';
+                if ($extKey === "tr03130" && $extVal != "") {
+                    // create dom from given xml
+                    $dom = new \DOMDocument();
+                    if(!$dom->loadXML($extVal)) {
+                        throw new \Exception('could not build tr03031 AuthnRequestExtension, invalid XML given');
+                    }
+                    // encryption
+                    $idpData = $settings->getIdPData();
+                    $idpCertEnc = $idpData['x509certMulti']['encryption'][0];
+                    if (!openssl_x509_read($idpCertEnc)) {
+                        throw new \Exception('could not build tr03031 AuthnRequestExtension, invalid certificate given');
+                    } 
+                    $objKey = new XMLSecurityKey(XMLSecurityKey::AES256_GCM);
+	                $objKey->generateSessionKey();
+                    $siteKey = new XMLSecurityKey(XMLSecurityKey::RSA_OAEP, array('type'=>'public'));
+                    $siteKey->loadKey($idpCertEnc, false, TRUE);
+                    $enc = new XMLSecEnc();
+	                $enc->type = XMLSecEnc::Element;
+	                $enc->setNode($dom->documentElement);
+                    $enc->encryptKey($siteKey, $objKey);
+	                $encNode = $enc->encryptNode($objKey);
+                    $extStr .= '<eid:EncryptedAuthnRequestExtension>';
+                    $extStr .= $dom->saveXML($encNode);
+                    $extStr .= '</eid:EncryptedAuthnRequestExtension>';
+                    // add needed namespaces
                     $nsArr[] = 'xmlns:eid="http://bsi.bund.de/eID/"';
-                    $nsArr[] = 'xmlns:ds="http://www.w3.org/2000/09/xmldsig#"';
-
-                    $extStr .= '        <eid:EncryptedAuthnRequestExtension>';
-                    $extStr .= '            <xenc:EncryptedData Type="http://www.w3.org/2001/04/xmlenc#Element">';
-                    $extStr .= '                <xenc:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#aes256-gcm"/>';
-                    $extStr .= '                <ds:KeyInfo>';
-                    $extStr .= '                    <xenc:EncryptedKey>';
-                    $extStr .= '                        <xenc:EncryptionMethodAlgorithm="http://www.w3.org/2001/04/xmlenc#rsa-oaep">';
-                    $extStr .= '                        <xenc:CipherData>';
-                    $extStr .= '                            <xenc:CipherValue>';
-                    $extStr .= '                            </xenc:CipherValue>';
-                    $extStr .= '                        </xenc:CipherData>';
-                    $extStr .= '                    </xenc:EncryptedKey>';
-                    $extStr .= '                </ds:KeyInfo>';
-                    $extStr .= '                <xenc:CipherData>';
-                    $extStr .= '                    <xenc:CipherValue>';
-                    $extStr .= '                    </xenc:CipherValue>';
-                    $extStr .= '                </xenc:CipherData>';
-                    $extStr .= '            </xenc:EncryptedData>';
-                    $extStr .= '        </eid:EncryptedAuthnRequestExtension>';
                 }
             }
             $extStr .= '    </samlp:Extensions>';
@@ -204,9 +206,27 @@ REQUESTEDAUTHN;
     Destination="{$destination}"
     ProtocolBinding="{$spData['assertionConsumerService']['binding']}"
     AssertionConsumerServiceURL="{$acsUrl}">
-    <saml:Issuer>{$spEntityId}</saml:Issuer>{$subjectStr}{$nameIdPolicyStr}{$requestedAuthnStr}{$extStr}
+    <saml:Issuer>{$spEntityId}</saml:Issuer>{$extStr}{$subjectStr}{$nameIdPolicyStr}{$requestedAuthnStr}
 </samlp:AuthnRequest>
 AUTHNREQUEST;
+
+        // sign the request
+        // TODO according to spec we should NOT need this, clarify!
+        $security = $settings->getSecurityData();
+        if (isset($security['authnRequestsSigned']) && $security['authnRequestsSigned']) {
+            $dom = new \DOMDocument();
+            $dom->loadXML($request);
+            $objDSig = new XMLSecurityDSig();
+            $objDSig->setCanonicalMethod(XMLSecurityDSig::EXC_C14N);
+            $objDSig->addReference($dom, XMLSecurityDSig::SHA256, array('http://www.w3.org/2000/09/xmldsig#enveloped-signature'), array('force_uri' => true));
+            $objKey = new XMLSecurityKey(XMLSecurityKey::RSA_SHA256, array('type'=>'private'));
+            $spData = $settings->getSPData();
+            $objKey->loadKey($spData['privateKey']);
+            $objDSig->sign($objKey);
+            $objDSig->add509Cert($spData['x509cert']);
+            $objDSig->appendSignature($dom->documentElement);
+            $request = $dom->saveXML();
+        }
 
         $this->_id = $id;
         $this->_authnRequest = $request;
