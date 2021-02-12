@@ -14,7 +14,6 @@
  */
 namespace OneLogin\Saml2;
 
-use phpDocumentor\Reflection\PseudoTypes\False_;
 use RobRichards\XMLSecLibs\XMLSecurityKey;
 use RobRichards\XMLSecLibs\XMLSecurityDSig;
 use RobRichards\XMLSecLibs\XMLSecEnc;
