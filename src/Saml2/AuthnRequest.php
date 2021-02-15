@@ -171,13 +171,18 @@ REQUESTEDAUTHN;
                     } 
                     $objKey = new XMLSecurityKey(XMLSecurityKey::AES256_GCM);
 	                $objKey->generateSessionKey();
-                    $siteKey = new XMLSecurityKey(XMLSecurityKey::RSA_OAEP, array('type'=>'public'));
+                    $siteKey = new XMLSecurityKey(XMLSecurityKey::RSA_OAEP_MGF1P, array('type'=>'public'));
                     $siteKey->loadKey($idpCertEnc, false, TRUE);
                     $enc = new XMLSecEnc();
 	                $enc->type = XMLSecEnc::Element;
 	                $enc->setNode($dom->documentElement);
                     $enc->encryptKey($siteKey, $objKey);
 	                $encNode = $enc->encryptNode($objKey);
+                    // add digest algo node
+                    $digestNode = $dom->createElement('dsig:DigestMethod');
+                    $digestNode->setAttribute('Algorithm', 'http://www.w3.org/2000/09/xmldsig#sha1');
+                    $encNode->childNodes[1]->childNodes[0]->childNodes[0]->appendChild($digestNode);
+                    // put it all together
                     $extStr .= '<eid:EncryptedAuthnRequestExtension>';
                     $extStr .= $dom->saveXML($encNode);
                     $extStr .= '</eid:EncryptedAuthnRequestExtension>';
@@ -208,24 +213,6 @@ REQUESTEDAUTHN;
     <saml:Issuer>{$spEntityId}</saml:Issuer>{$extStr}{$subjectStr}{$nameIdPolicyStr}{$requestedAuthnStr}
 </samlp:AuthnRequest>
 AUTHNREQUEST;
-
-        // sign the request
-        // TODO according to spec we should NOT need this, clarify!
-        $security = $settings->getSecurityData();
-        if (isset($security['authnRequestsSigned']) && $security['authnRequestsSigned']) {
-            $dom = new \DOMDocument();
-            $dom->loadXML($request);
-            $objDSig = new XMLSecurityDSig();
-            $objDSig->setCanonicalMethod(XMLSecurityDSig::EXC_C14N);
-            $objDSig->addReference($dom, XMLSecurityDSig::SHA256, array('http://www.w3.org/2000/09/xmldsig#enveloped-signature'), array('force_uri' => true));
-            $objKey = new XMLSecurityKey(XMLSecurityKey::RSA_SHA256, array('type'=>'private'));
-            $spData = $settings->getSPData();
-            $objKey->loadKey($spData['privateKey']);
-            $objDSig->sign($objKey);
-            $objDSig->add509Cert($spData['x509cert']);
-            $objDSig->appendSignature($dom->documentElement);
-            $request = $dom->saveXML();
-        }
 
         $this->_id = $id;
         $this->_authnRequest = $request;
