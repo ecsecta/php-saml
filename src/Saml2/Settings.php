@@ -27,7 +27,7 @@ use Exception;
 class Settings
 {
     /**
-     * List AuthnRequestExtensions.
+     * List of AuthnRequestExtensions.
      *
      * @var array
      */
@@ -461,6 +461,13 @@ class Settings
         if (!isset($this->_sp['privateKey'])) {
             $this->_sp['privateKey'] = '';
         }
+
+        if (!isset($this->_sp['x509certEnc'])) {
+            $this->_sp['x509certEnc'] = '';
+        }
+        if (!isset($this->_sp['privateKeyEnc'])) {
+            $this->_sp['privateKeyEnc'] = '';
+        }
     }
 
     /**
@@ -698,7 +705,9 @@ class Settings
     {
         $key = $this->getSPkey();
         $cert = $this->getSPcert();
-        return (!empty($key) && !empty($cert));
+        $keyEnc = $this->getSPkeyEnc();
+        $certEnc = $this->getSPcertEnc();
+        return (!empty($key) && !empty($cert) && !empty($keyEnc) && !empty($certEnc));
     }
 
     /**
@@ -732,6 +741,26 @@ class Settings
     }
 
     /**
+     * Returns the encryption x509 private key of the SP.
+     *
+     * @return string SP encryption private key
+     */
+    public function getSPkeyEnc()
+    {
+        $key = null;
+        if (isset($this->_sp['privateKeyEnc']) && !empty($this->_sp['privateKeyEnc'])) {
+            $key = $this->_sp['privateKeyEnc'];
+        } else {
+            $keyFile = $this->_paths['cert'].'sp.keyEnc';
+
+            if (file_exists($keyFile)) {
+                $key = file_get_contents($keyFile);
+            }
+        }
+        return $key;
+    }
+
+    /**
      * Returns the x509 public cert of the SP.
      *
      * @return string SP public cert
@@ -744,6 +773,27 @@ class Settings
             $cert = $this->_sp['x509cert'];
         } else {
             $certFile = $this->_paths['cert'].'sp.crt';
+
+            if (file_exists($certFile)) {
+                $cert = file_get_contents($certFile);
+            }
+        }
+        return $cert;
+    }
+
+    /**
+     * Returns the encryption x509 public cert of the SP.
+     *
+     * @return string SP encryption public cert
+     */
+    public function getSPcertEnc()
+    {
+        $cert = null;
+
+        if (isset($this->_sp['x509certEnc']) && !empty($this->_sp['x509certEnc'])) {
+            $cert = $this->_sp['x509certEnc'];
+        } else {
+            $certFile = $this->_paths['cert'].'sp.crtEnc';
 
             if (file_exists($certFile)) {
                 $cert = file_get_contents($certFile);
@@ -767,6 +817,29 @@ class Settings
             $cert = $this->_sp['x509certNew'];
         } else {
             $certFile = $this->_paths['cert'].'sp_new.crt';
+
+            if (file_exists($certFile)) {
+                $cert = file_get_contents($certFile);
+            }
+        }
+        return $cert;
+    }
+
+    /**
+     * Returns the encryption x509 public of the SP that is
+     * planed to be used soon instead the other
+     * encryption public cert
+     *
+     * @return string SP encryption public cert New
+     */
+    public function getSPcertNewEnc()
+    {
+        $cert = null;
+
+        if (isset($this->_sp['x509certNewEnc']) && !empty($this->_sp['x509certNewEnc'])) {
+            $cert = $this->_sp['x509certNewEnc'];
+        } else {
+            $certFile = $this->_paths['cert'].'sp_new.crtEnc';
 
             if (file_exists($certFile)) {
                 $cert = file_get_contents($certFile);
@@ -1080,6 +1153,9 @@ class Settings
         if (isset($this->_sp['x509cert'])) {
             $this->_sp['x509cert'] = Utils::formatCert($this->_sp['x509cert']);
         }
+        if (isset($this->_sp['x509certEnc'])) {
+            $this->_sp['x509certEnc'] = Utils::formatCert($this->_sp['x509certEnc']);
+        }
     }
 
     /**
@@ -1090,6 +1166,9 @@ class Settings
         if (isset($this->_sp['x509certNew'])) {
             $this->_sp['x509certNew'] = Utils::formatCert($this->_sp['x509certNew']);
         }
+        if (isset($this->_sp['x509certNewEnc'])) {
+            $this->_sp['x509certNewEnc'] = Utils::formatCert($this->_sp['x509certNewEnc']);
+        }
     }
 
     /**
@@ -1099,6 +1178,9 @@ class Settings
     {
         if (isset($this->_sp['privateKey'])) {
             $this->_sp['privateKey'] = Utils::formatPrivateKey($this->_sp['privateKey']);
+        }
+        if (isset($this->_sp['privateKeyEnc'])) {
+            $this->_sp['privateKeyEnc'] = Utils::formatPrivateKey($this->_sp['privateKeyEnc']);
         }
     }
 
