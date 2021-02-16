@@ -188,6 +188,8 @@ REQUESTEDAUTHN;
                     $extStr .= '</eid:EncryptedAuthnRequestExtension>';
                     // add needed namespaces
                     $nsArr[] = 'xmlns:eid="http://bsi.bund.de/eID/"';
+                    // enforce redirect binding
+                    $spData['assertionConsumerService']['binding'] = 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect';
                 }
             }
             $extStr .= '    </samlp:Extensions>';
