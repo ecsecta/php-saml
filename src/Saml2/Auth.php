@@ -217,6 +217,63 @@ class Auth
         $this->_paths['schemas'] = $path;
     }
 
+    /*
+     * Create the SAML Response sent by the IdP.
+     *
+     * @throws Error
+     */
+    public function createResponse()
+    {
+        $this->_errors = array();
+        $responseParam = null;
+        if (isset($_POST['SAMLResponse'])) {
+            $responseParam = $_POST['SAMLResponse'];
+        } else if (isset($_GET['SAMLResponse'])) {
+            $responseParam = $_GET['SAMLResponse'];
+        } else {
+            $this->_errors[] = 'invalid_binding';
+            throw new Error(
+                'SAML Response not found',
+                Error::SAML_RESPONSE_NOT_FOUND
+            );
+        }
+        $response = new Response($this->_settings, $responseParam);
+
+        return $response;
+    }
+
+    /**
+     * Process an already created SAML Response.
+     *
+     * @param Response $response The response
+     * @param string|null $requestId The ID of the AuthNRequest sent by this SP to the IdP
+     *
+     * @throws Error
+     * @throws ValidationError
+     */
+    public function processCreatedResponse($response, $requestId = null)
+    {
+        $this->_lastResponse = $response->getXMLDocument();
+
+        if ($response->isValid($requestId)) {
+            $this->_attributes = $response->getAttributes();
+            $this->_attributesWithFriendlyName = $response->getAttributesWithFriendlyName();
+            $this->_nameid = $response->getNameId();
+            $this->_nameidFormat = $response->getNameIdFormat();
+            $this->_nameidNameQualifier = $response->getNameIdNameQualifier();
+            $this->_nameidSPNameQualifier = $response->getNameIdSPNameQualifier();
+            $this->_authenticated = true;
+            $this->_sessionIndex = $response->getSessionIndex();
+            $this->_sessionExpiration = $response->getSessionNotOnOrAfter();
+            $this->_lastMessageId = $response->getId();
+            $this->_lastAssertionId = $response->getAssertionId();
+            $this->_lastAssertionNotOnOrAfter = $response->getAssertionNotOnOrAfter();
+        } else {
+            $this->_errors[] = 'invalid_response';
+            $this->_lastErrorException = $response->getErrorException();
+            $this->_lastError = $response->getError();
+        }
+    }
     /**
      * Process the SAML Response sent by the IdP.
      *

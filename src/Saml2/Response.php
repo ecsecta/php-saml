@@ -101,7 +101,7 @@ class Response
         $this->document = Utils::loadXML($this->document, $this->response);
         if (!$this->document) {
             throw new ValidationError(
-                "SAML Response could not be processed",
+                "SAML Response could not be processed: ".$this->response,
                 ValidationError::INVALID_XML_FORMAT
             );
         }
