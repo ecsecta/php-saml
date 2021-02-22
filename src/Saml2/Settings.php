@@ -984,19 +984,23 @@ class Settings
         $metadata = Metadata::builder($this->_sp, $this->_security['authnRequestsSigned'], $this->_security['wantAssertionsSigned'], $validUntil, $cacheDuration, $this->getContacts(), $this->getOrganization());
 
         $certNew = $this->getSPcertNew();
+        $certNewEnc = $this->getSPcertNewEnc();
         if (!empty($certNew)) {
             $metadata = Metadata::addX509KeyDescriptors(
                 $metadata,
                 $certNew,
+                $certNewEnc,
                 $alwaysPublishEncryptionCert || $this->_security['wantNameIdEncrypted'] || $this->_security['wantAssertionsEncrypted']
             );
         }
 
         $cert = $this->getSPcert();
+        $certEnc = $this->getSPcertEnc();
         if (!empty($cert)) {
             $metadata = Metadata::addX509KeyDescriptors(
                 $metadata,
                 $cert,
+                $certEnc,
                 $alwaysPublishEncryptionCert || $this->_security['wantNameIdEncrypted'] || $this->_security['wantAssertionsEncrypted']
             );
         }
