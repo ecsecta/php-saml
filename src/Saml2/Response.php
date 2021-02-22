@@ -95,7 +95,7 @@ class Response
             Utils::setBaseURL($baseURL);
         }
 
-        $this->response = base64_decode($response);
+        $this->response = $response;
 
         $this->document = new DOMDocument();
         $this->document = Utils::loadXML($this->document, $this->response);
@@ -125,8 +125,9 @@ class Response
      * @throws Exception
      * @throws ValidationError
      */
-    public function isValid($requestId = null)
+    public function isValid($logger, $requestId = null)
     {
+        $logger->error(print_r($this->decryptedDocument,true));
         $this->_error = null;
         try {
             // Check SAML version
@@ -1124,7 +1125,7 @@ class Response
      */
     protected function decryptAssertion(\DomNode $dom)
     {
-        $pem = $this->_settings->getSPkey();
+        $pem = $this->_settings->getSPkeyEnc();
 
         if (empty($pem)) {
             throw new Error(

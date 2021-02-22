@@ -228,10 +228,13 @@ class Auth
         $responseParam = null;
         if (isset($_POST['SAMLResponse'])) {
             $responseParam = $_POST['SAMLResponse'];
+            $responseParam = base64_decode($responseParam);
         } else if (isset($_GET['SAMLResponse'])) {
             $responseParam = $_GET['SAMLResponse'];
+            $responseParam = base64_decode($responseParam);
+            $responseParam = gzinflate($responseParam);
         } else {
-            $this->_errors[] = 'invalid_binding';
+            $this->_errors[] = 'SAML Response not found';
             throw new Error(
                 'SAML Response not found',
                 Error::SAML_RESPONSE_NOT_FOUND
@@ -251,11 +254,11 @@ class Auth
      * @throws Error
      * @throws ValidationError
      */
-    public function processCreatedResponse($response, $requestId = null)
+    public function processCreatedResponse($logger, $response, $requestId = null)
     {
         $this->_lastResponse = $response->getXMLDocument();
 
-        if ($response->isValid($requestId)) {
+        if ($response->isValid($logger, $requestId)) {
             $this->_attributes = $response->getAttributes();
             $this->_attributesWithFriendlyName = $response->getAttributesWithFriendlyName();
             $this->_nameid = $response->getNameId();
