@@ -125,9 +125,8 @@ class Response
      * @throws Exception
      * @throws ValidationError
      */
-    public function isValid($logger, $requestId = null)
+    public function isValid($requestId = null)
     {
-        $logger->error(print_r($this->decryptedDocument,true));
         $this->_error = null;
         try {
             // Check SAML version
@@ -172,14 +171,11 @@ class Response
                 $security = $this->_settings->getSecurityData();
 
                 if ($security['wantXMLValidation']) {
-                    // determine schema and schemapath for validation
-                    // TODO verify this!
-                    $schema = 'saml-schema-protocol-2.0.xsd';
+                    // schema and schemapath for validation
+                    $schema = 'eidlogin.xsd';
                     $schemaPath = $this->_settings->getSchemasPath();
-                    if (array_key_exists('tr03130, ',$this->_settings->getAuthnReqExt())) {
-                        $schema = 'TR-03130eID-Server.xsd';
-                        $schemaPath = $this->_settings->getSchemasPath().'/tr03130';
-                    }
+                    // check xml
+                    error_log('6a');
                     $errorXmlMsg = "Invalid SAML Response. Not match the ".$schema;
                     $res = Utils::validateXML($this->document, $schema, $this->_settings->isDebugActive(), $schemaPath);
                     if (!$res instanceof DOMDocument) {
@@ -188,10 +184,10 @@ class Response
                             ValidationError::INVALID_XML_FORMAT
                         );
                     }
-
+                    error_log('6b');
                     // If encrypted, check also the decrypted document
                     if ($this->encrypted) {
-                        $res = Utils::validateXML($this->decryptedDocument, 'saml-schema-protocol-2.0.xsd', $this->_settings->isDebugActive(), $this->_settings->getSchemasPath());
+                        $res = Utils::validateXML($this->decryptedDocument, $schema, $this->_settings->isDebugActive(), $schemaPath);
                         if (!$res instanceof DOMDocument) {
                             throw new ValidationError(
                                 $errorXmlMsg,
@@ -199,6 +195,7 @@ class Response
                             );
                         }
                     }
+                    error_log('6c');
 
                 }
 
@@ -209,6 +206,7 @@ class Response
                     $responseInResponseTo = $this->document->documentElement->getAttribute('InResponseTo');
                 }
 
+                error_log('7');
                 if (!isset($requestId) && isset($responseInResponseTo) && $security['rejectUnsolicitedResponsesWithInResponseTo']) {
                     throw new ValidationError(
                         "The Response has an InResponseTo attribute: " . $responseInResponseTo . " while no InResponseTo was expected",
@@ -216,6 +214,7 @@ class Response
                     );
                 }
 
+                error_log('8');
                 // Check if the InResponseTo of the Response matchs the ID of the AuthNRequest (requestId) if provided
                 if (isset($requestId) && $requestId != $responseInResponseTo) {
                     if ($responseInResponseTo == null) {
@@ -231,6 +230,7 @@ class Response
                     }
                 }
 
+                error_log('9');
                 if (!$this->encrypted && $security['wantAssertionsEncrypted']) {
                     throw new ValidationError(
                         "The assertion of the Response is not encrypted and the SP requires it",

@@ -254,11 +254,11 @@ class Auth
      * @throws Error
      * @throws ValidationError
      */
-    public function processCreatedResponse($logger, $response, $requestId = null)
+    public function processCreatedResponse($response, $requestId = null)
     {
         $this->_lastResponse = $response->getXMLDocument();
 
-        if ($response->isValid($logger, $requestId)) {
+        if ($response->isValid($requestId)) {
             $this->_attributes = $response->getAttributes();
             $this->_attributesWithFriendlyName = $response->getAttributesWithFriendlyName();
             $this->_nameid = $response->getNameId();

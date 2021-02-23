@@ -1,15 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<schema xmlns="http://www.w3.org/2001/XMLSchema" xmlns:dss="urn:oasis:names:tc:dss:1.0:core:schema"
-	xmlns:tns="http://bsi.bund.de/eID/" xmlns:Q1="urn:oasis:names:tc:SAML:1.0:assertion"
-	xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" targetNamespace="http://bsi.bund.de/eID/"
+<!-- schema for eidlogin app, a stripped down version of TR-03130eID-Server.xsd -->
+<schema xmlns="http://www.w3.org/2001/XMLSchema" 
+	xmlns:dss="urn:oasis:names:tc:dss:1.0:core:schema"
+	xmlns:tns="http://bsi.bund.de/eID/"
+	xmlns:Q1="urn:oasis:names:tc:SAML:1.0:assertion"
+	xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" 
+	targetNamespace="http://bsi.bund.de/eID/"
 	elementFormDefault="qualified" attributeFormDefault="unqualified"
-	version="2.3.0 2020-06-19">
+	version="1.0.0 2021-02-23">
 
-    <import namespace="urn:oasis:names:tc:dss:1.0:core:schema"
-		schemaLocation="external/oasis-dss-core-schema-v1.0-os.xsd" />
 	<import namespace="urn:oasis:names:tc:SAML:2.0:assertion"
-		schemaLocation="external/saml-schema-assertion-2.0.xsd" />
-	<complexType name="SessionType">
+		schemaLocation="saml-schema-assertion-2.0.xsd" />
+	<import namespace="urn:oasis:names:tc:SAML:2.0:protocol"
+		schemaLocation="saml-schema-protocol-2.0.xsd" />
+
+	<!-- <complexType name="SessionType">
 		<sequence>
 			<element name="ID">
 				<simpleType>
@@ -28,7 +33,7 @@
 			<element name="PSK" type="tns:PreSharedKeyType" />
 			<element ref="dss:Result" />
 		</sequence>
-	</complexType>
+	</complexType> -->
 	<complexType name="PersonalDataType">
 		<sequence>
 			<element name="DocumentType" type="tns:DocumentType"
@@ -95,7 +100,7 @@
 			<element name="FulfilsRequest" type="boolean" />
 		</sequence>
 	</complexType>
-	<element name="useIDRequest" type="tns:useIDRequestType" />
+	<!-- <element name="useIDRequest" type="tns:useIDRequestType" />
 	<complexType name="useIDRequestType">
 		<sequence>
 			<element name="UseOperations"
@@ -114,8 +119,8 @@
 			<element name="PSK" type="tns:PreSharedKeyType"
 				minOccurs="0" />
 		</sequence>
-	</complexType>
-	<complexType name="OperationsSelectorType">
+	</complexType> -->
+	<!-- <complexType name="OperationsSelectorType">
 		<sequence>
 			<element name="DocumentType" type="tns:AttributeSelectionType"
 				default="PROHIBITED" />
@@ -150,7 +155,7 @@
 			<element name="PlaceVerification" type="tns:AttributeSelectionType"
 				default="PROHIBITED" />
 		</sequence>
-	</complexType>
+	</complexType> -->
 	<complexType name="PlaceVerificationRequestType">
 		<sequence>
 			<element name="CommunityID">
@@ -163,7 +168,7 @@
 			</element>
 		</sequence>
 	</complexType>
-	<element name="getServerInfoResponse" type="tns:getServerInfoResponseType" />
+	<!-- <element name="getServerInfoResponse" type="tns:getServerInfoResponseType" />
 	<complexType name="getServerInfoResponseType">
 		<sequence>
 			<element name="ServerVersion" type="tns:VersionType" />
@@ -181,15 +186,15 @@
 	<element name="getServerInfoRequest" type="tns:nullType" />
 	<complexType name="nullType">
 		<sequence />
-	</complexType>
-	<element name="getResultRequest" type="tns:getResultRequestType" />
+	</complexType> -->
+	<!-- <element name="getResultRequest" type="tns:getResultRequestType" />
 	<complexType name="getResultRequestType">
 		<sequence>
 			<element name="Session" type="tns:SessionType" />
 			<element name="RequestCounter" type="int" />
 		</sequence>
-	</complexType>
-	<element name="getResultResponse" type="tns:getResultResponseType" />
+	</complexType> -->
+	<!-- <element name="getResultResponse" type="tns:getResultResponseType" />
 	<complexType name="getResultResponseType">
 		<sequence>
 			<element name="PersonalData" type="tns:PersonalDataType"
@@ -207,8 +212,8 @@
 			<element name="LevelOfAssuranceResult" type="tns:LevelOfAssuranceType" maxOccurs="1" minOccurs="0"></element>
 			<element ref="dss:Result" />
 		</sequence>
-	</complexType>
-	<complexType name="PreSharedKeyType">
+	</complexType> -->
+	<!-- <complexType name="PreSharedKeyType">
 		<sequence>
 			<element name="ID">
 				<simpleType>
@@ -225,7 +230,7 @@
 				</simpleType>
 			</element>
 		</sequence>
-	</complexType>
+	</complexType> -->
 	<!-- New types for eID-WSDL (after version 1.3) -->
 	<complexType name="GeneralDateType">
 		<sequence>
@@ -316,7 +321,7 @@
 	</simpleType>
 
 	<attribute name="AttributeNotOnChip" type="boolean" default="false" />
-	<complexType name="OperationsRequestorType">
+	<!-- <complexType name="OperationsRequestorType">
 		<sequence>
 			<element name="DocumentType" type="tns:AttributeRequestType"
 				default="PROHIBITED" />
@@ -351,8 +356,8 @@
 			<element name="PlaceVerification" type="tns:AttributeRequestType"
 				default="PROHIBITED" />
 		</sequence>
-	</complexType>
-	<complexType name="OperationsResponderType">
+	</complexType> -->
+	<!-- <complexType name="OperationsResponderType">
 		<sequence>
 			<element name="DocumentType" type="tns:AttributeResponseType"
 				default="PROHIBITED" />
@@ -387,13 +392,13 @@
 			<element name="PlaceVerification" type="tns:AttributeResponseType"
 				default="PROHIBITED" />
 		</sequence>
-	</complexType>
+	</complexType> -->
 	
 	<!-- Additional types used in SAML AuthnRequest according to eIDAS since Version 2.1.0 -->
 	
-	<simpleType name="UseEidasType">
+	<!-- <simpleType name="UseEidasType">
 		<restriction base="boolean"></restriction>
-	</simpleType>
+	</simpleType> -->
 	
 	<simpleType name="LevelOfAssuranceType">
 		<restriction base="string">
@@ -408,7 +413,7 @@
 		</restriction>
 	</simpleType>
 
-	<simpleType name="SendingMemberStateType">
+	<!-- <simpleType name="SendingMemberStateType">
 		<restriction base="string">
 			<pattern value="[A-Z]{2}"></pattern>
 		</restriction>
@@ -428,11 +433,11 @@
 				default="http://eidas.europa.eu/LoA/high" minOccurs="0"/>
 			<element name="SendingMemberState" type="tns:SendingMemberStateType" minOccurs="0"/>
 		</sequence>
-	</complexType>
+	</complexType> -->
 
 	<!-- Additional types used since Version 2.3.0 -->
 
-	<complexType name="TransactionAttestationRequestType">
+	<!-- <complexType name="TransactionAttestationRequestType">
 		<sequence>
 			<element name="TransactionAttestationFormat" type="anyURI"></element>
 			<element name="TransactionContext" type="string"></element>
@@ -456,5 +461,6 @@
 			<enumeration value="LegalPerson"></enumeration>
 			<enumeration value="LegalPersonRepresentative"></enumeration>
 		</restriction>
-	</simpleType>
+	</simpleType> -->
+
 </schema>
