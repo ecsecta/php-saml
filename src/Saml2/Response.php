@@ -785,6 +785,18 @@ class Response
     }
 
     /**
+     * Gets the Attributes from the AttributeStatement element as XML
+     *
+     * @return array The attributes of the SAML Assertion as XML
+     *
+     * @throws ValidationError
+     */
+    public function getAttributesAsXML()
+    {
+        return $this->_getAttributesByKeyName('Name', true);
+    }
+
+    /**
      * Gets the Attributes from the AttributeStatement element using their FriendlyName.
      *
      * @return array The attributes of the SAML Assertion
@@ -798,12 +810,13 @@ class Response
 
     /**
      * @param string $keyName
+     * @param bool $returnXML
      *
      * @return array
      *
      * @throws ValidationError
      */
-    private function _getAttributesByKeyName($keyName = "Name")
+    private function _getAttributesByKeyName($keyName = "Name", $returnXML=false)
     {
         $attributes = array();
         $entries = $this->_queryAssertion('/saml:AttributeStatement/saml:Attribute');
@@ -829,7 +842,11 @@ class Response
             foreach ($entry->childNodes as $childNode) {
                 $tagName = ($childNode->prefix ? $childNode->prefix.':' : '') . 'AttributeValue';
                 if ($childNode->nodeType == XML_ELEMENT_NODE && $childNode->tagName === $tagName) {
+                  if($returnXML) {
+                    $attributeValues[] = $childNode->ownerDocument->saveXML($childNode);
+                  } else {
                     $attributeValues[] = $childNode->nodeValue;
+                  }
                 }
             }
 
