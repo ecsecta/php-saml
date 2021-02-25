@@ -408,7 +408,10 @@ class Response
                 }
             }
 
-            if (empty($signedElements) || (!$hasSignedResponse && !$hasSignedAssertion)) {
+            // signature check is done outside of php-saml for TR-03130
+            if (array_key_exists('tr03130',$this->_settings->getAuthnReqExt())) {
+                return true;
+            } else if (empty($signedElements) || (!$hasSignedResponse && !$hasSignedAssertion)) {
                 throw new ValidationError(
                     'No Signature found. SAML Response rejected',
                     ValidationError::NO_SIGNATURE_FOUND
