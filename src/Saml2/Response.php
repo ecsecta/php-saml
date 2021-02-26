@@ -1246,12 +1246,14 @@ class Response
 
     /**
      * Returns the SAML Response document (If contains an encrypted assertion, decrypts it)
+     * 
+     * @param bool $encrypted Return the encrypted version
      *
      * @return DomDocument SAML Response
      */
-    public function getXMLDocument()
+    public function getXMLDocument($encrypted=false)
     {
-        if ($this->encrypted) {
+        if ($this->encrypted && !$encrypted) {
             return $this->decryptedDocument;
         } else {
             return $this->document;
